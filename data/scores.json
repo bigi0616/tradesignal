@@ -1,0 +1,10 @@
+[
+  { "rank": 1, "name": "반도체",    "yoy": "+169%",    "streak": 3, "score": 96, "signal": "매수" },
+  { "rank": 2, "name": "컴퓨터·SSD","yoy": "+291%",   "streak": 4, "score": 87, "signal": "매수" },
+  { "rank": 3, "name": "화장품",    "yoy": "+두자릿수","streak": 7, "score": 81, "signal": "매수" },
+  { "rank": 4, "name": "선박",      "yoy": "+16.7%",   "streak": 5, "score": 74, "signal": "관망" },
+  { "rank": 5, "name": "비철금속",  "yoy": "+41.5%",   "streak": 4, "score": 68, "signal": "주목" },
+  { "rank": 6, "name": "바이오헬스","yoy": "+증가세",  "streak": 7, "score": 62, "signal": "주목" },
+  { "rank": 7, "name": "석유제품",  "yoy": "+46.6%",   "streak": 2, "score": 44, "signal": "중립" },
+  { "rank": 8, "name": "자동차",    "yoy": "−소폭",    "streak": 0, "score": 28, "signal": "관망" }
+]

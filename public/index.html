@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TradeSignal — 수출입 기반 투자 인사이트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0efe8;
+  --text2: #8c8b84;
+  --text3: #4a4a52;
+  --accent: #e8573c;
+  --accent2: #f0a050;
+  --blue: #4a8fe8;
+  --green: #3db87a;
+  --serif: 'DM Serif Display', serif;
+  --sans: 'DM Sans', sans-serif;
+  --r: 10px;
+  --r2: 16px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+
+/* NAV */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 56px;
+}
+.nav-brand { font-family: var(--serif); font-size: 18px; color: var(--text); letter-spacing: -0.3px; }
+.nav-brand span { color: var(--accent); }
+.nav-links { display: flex; gap: 4px; }
+.nav-links a {
+  font-size: 12px; color: var(--text2); text-decoration: none;
+  padding: 6px 12px; border-radius: 6px; transition: all .2s;
+  letter-spacing: 0.02em;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--text); background: var(--bg3); }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-date { font-size: 11px; color: var(--text3); }
+.nav-badge {
+  font-size: 10px; padding: 3px 9px; border-radius: 20px;
+  background: rgba(232,87,60,0.15); color: var(--accent);
+  border: 1px solid rgba(232,87,60,0.25);
+  font-weight: 500; letter-spacing: 0.04em;
+}
+.hamburger { display: none; flex-direction: column; gap: 4px; cursor: pointer; padding: 4px; }
+.hamburger span { width: 20px; height: 1.5px; background: var(--text2); border-radius: 2px; transition: all .2s; }
+
+/* MOBILE NAV DRAWER */
+.mobile-drawer {
+  display: none;
+  position: fixed; top: 56px; left: 0; right: 0; bottom: 0;
+  background: rgba(10,10,15,0.97);
+  z-index: 99; padding: 24px;
+  flex-direction: column; gap: 4px;
+}
+.mobile-drawer.open { display: flex; }
+.mobile-drawer a {
+  font-size: 15px; color: var(--text2); text-decoration: none;
+  padding: 14px 16px; border-radius: 8px; border: 1px solid var(--border);
+  transition: all .2s;
+}
+.mobile-drawer a:hover { color: var(--text); background: var(--bg3); }
+
+/* MAIN LAYOUT */
+main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 80px; }
+
+/* HERO */
+.hero {
+  padding: 48px 0 40px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 32px;
+}
+.hero-eyebrow {
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.hero-eyebrow::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
+.hero h1 { font-family: var(--serif); font-size: clamp(28px, 5vw, 48px); line-height: 1.15; color: var(--text); margin-bottom: 16px; letter-spacing: -0.5px; }
+.hero h1 em { font-style: italic; color: var(--accent2); }
+.hero-sub { font-size: 14px; color: var(--text2); max-width: 520px; line-height: 1.8; margin-bottom: 28px; }
+.hero-kpis { display: flex; flex-wrap: wrap; gap: 20px; }
+.kpi { display: flex; flex-direction: column; gap: 3px; }
+.kpi-val { font-family: var(--serif); font-size: 26px; color: var(--text); letter-spacing: -0.5px; }
+.kpi-val.up { color: var(--accent); }
+.kpi-val.pos { color: var(--green); }
+.kpi-label { font-size: 11px; color: var(--text3); letter-spacing: 0.04em; }
+.kpi-sep { width: 1px; background: var(--border2); align-self: stretch; }
+
+/* SECTION HEADERS */
+.sec-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.sec-title { font-family: var(--serif); font-size: 20px; color: var(--text); letter-spacing: -0.3px; }
+.sec-sub { font-size: 11px; color: var(--text3); }
+.sec-link { font-size: 11px; color: var(--accent); text-decoration: none; letter-spacing: 0.04em; }
+
+/* TICKER BAR */
+.ticker-wrap { overflow: hidden; border: 1px solid var(--border); border-radius: var(--r); background: var(--bg2); margin-bottom: 28px; }
+.ticker-inner { display: flex; animation: ticker 30s linear infinite; white-space: nowrap; }
+.ticker-wrap:hover .ticker-inner { animation-play-state: paused; }
+@keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+.ticker-item { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; border-right: 1px solid var(--border); font-size: 12px; }
+.ticker-name { color: var(--text2); }
+.ticker-val { color: var(--text); font-weight: 500; }
+.ticker-chg { font-size: 11px; }
+.ticker-chg.up { color: var(--accent); }
+.ticker-chg.dn { color: var(--blue); }
+
+/* INSIGHT CARDS */
+.insight-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 32px; }
+.insight-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 20px;
+  cursor: pointer; transition: all .25s;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.insight-card:hover { border-color: var(--border2); background: var(--bg3); transform: translateY(-2px); }
+.insight-card.featured { border-color: rgba(232,87,60,0.3); background: rgba(232,87,60,0.04); }
+.ic-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.ic-rank { font-size: 10px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+.ic-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 20px; font-weight: 500;
+  white-space: nowrap;
+}
+.badge-red { background: rgba(232,87,60,0.15); color: var(--accent); border: 1px solid rgba(232,87,60,0.2); }
+.badge-blue { background: rgba(74,143,232,0.15); color: var(--blue); border: 1px solid rgba(74,143,232,0.2); }
+.badge-grn { background: rgba(61,184,122,0.15); color: var(--green); border: 1px solid rgba(61,184,122,0.2); }
+.badge-amb { background: rgba(240,160,80,0.15); color: var(--accent2); border: 1px solid rgba(240,160,80,0.2); }
+.badge-gray { background: rgba(255,255,255,0.06); color: var(--text2); border: 1px solid var(--border2); }
+.ic-name { font-family: var(--serif); font-size: 18px; color: var(--text); }
+.ic-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.ic-tag { font-size: 10px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border2); color: var(--text2); }
+.ic-sparkwrap { position: relative; height: 40px; }
+.ic-desc { font-size: 12px; color: var(--text2); line-height: 1.7; }
+.ic-score { display: flex; align-items: center; gap: 8px; }
+.ic-score-label { font-size: 10px; color: var(--text3); min-width: 54px; }
+.ic-score-track { flex: 1; height: 3px; background: var(--bg3); border-radius: 2px; }
+.ic-score-fill { height: 100%; border-radius: 2px; }
+.ic-score-val { font-size: 11px; color: var(--text2); min-width: 24px; text-align: right; }
+
+/* INSIGHT DETAIL */
+.insight-detail {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 24px;
+  margin-bottom: 32px;
+}
+.detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.detail-title { font-family: var(--serif); font-size: 22px; color: var(--text); }
+.detail-meta { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.layer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); border-radius: var(--r); overflow: hidden; margin-bottom: 20px; }
+.layer-item { background: var(--bg3); padding: 16px; }
+.layer-num { font-size: 10px; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 6px; }
+.layer-q { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 8px; }
+.layer-a { font-size: 11px; color: var(--text2); line-height: 1.7; }
+.insight-box {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 16px; margin-bottom: 16px;
+}
+.insight-box-title { font-size: 11px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 10px; }
+.insight-point { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+.insight-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+
+/* STOCK CARDS */
+.stock-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 32px; }
+.stock-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r2); padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  transition: all .2s;
+}
+.stock-card:hover { border-color: var(--border2); }
+.stock-card.top { border-color: rgba(232,87,60,0.25); }
+.sc-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.sc-name { font-size: 14px; font-weight: 500; color: var(--text); }
+.sc-code { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.sc-sparkwrap { position: relative; height: 48px; }
+.sc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.sc-stat { background: var(--bg3); border-radius: 6px; padding: 8px; }
+.sc-stat-label { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+.sc-stat-val { font-size: 12px; font-weight: 500; color: var(--text); }
+.sc-desc { font-size: 11px; color: var(--text2); line-height: 1.7; }
+.sc-btn {
+  font-size: 11px; color: var(--accent); border: 1px solid rgba(232,87,60,0.25);
+  background: transparent; border-radius: 6px; padding: 7px 12px;
+  cursor: pointer; transition: all .2s; text-align: center;
+  font-family: var(--sans);
+}
+.sc-btn:hover { background: rgba(232,87,60,0.08); }
+
+/* WEEKLY BRIEF */
+.brief-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: var(--r2); overflow: hidden; margin-bottom: 32px; }
+.brief-item { background: var(--bg2); padding: 16px 20px; display: flex; gap: 16px; align-items: flex-start; transition: background .2s; cursor: pointer; }
+.brief-item:hover { background: var(--bg3); }
+.brief-date { font-size: 11px; color: var(--text3); min-width: 56px; padding-top: 2px; }
+.brief-content { flex: 1; }
+.brief-title { font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.brief-summary { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.brief-tags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+
+/* SCHEDULE */
+.schedule-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 32px; }
+.sch-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; }
+.sch-date { font-size: 22px; font-family: var(--serif); color: var(--text3); margin-bottom: 6px; }
+.sch-event { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.sch-note { font-size: 11px; color: var(--text2); }
+.sch-card.today { border-color: rgba(232,87,60,0.3); }
+.sch-card.today .sch-date { color: var(--accent); }
+
+/* SCORE TABLE */
+.score-table { width: 100%; border-collapse: collapse; margin-bottom: 32px; }
+.score-table th { font-size: 10px; color: var(--text3); text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 400; }
+.score-table td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text); vertical-align: middle; }
+.score-table tr:last-child td { border-bottom: none; }
+.score-table tr:hover td { background: var(--bg3); }
+.rank-num { font-family: var(--serif); font-size: 16px; color: var(--text3); }
+.mini-bar { height: 3px; background: var(--bg3); border-radius: 2px; width: 80px; }
+.mini-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+/* BOTTOM NAV (mobile) */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(10,10,15,0.96); backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  padding: 8px 0 env(safe-area-inset-bottom, 8px);
+  z-index: 100;
+}
+.bottom-nav-inner { display: flex; justify-content: space-around; }
+.bn-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 16px; cursor: pointer; color: var(--text3); transition: color .2s; text-decoration: none; }
+.bn-item.active, .bn-item:hover { color: var(--accent); }
+.bn-icon { font-size: 18px; line-height: 1; }
+.bn-label { font-size: 10px; letter-spacing: 0.03em; }
+
+/* FOOTER */
+footer { border-top: 1px solid var(--border); padding: 32px 20px; max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+.footer-brand { font-family: var(--serif); font-size: 16px; color: var(--text2); }
+.footer-brand span { color: var(--accent); }
+.footer-note { font-size: 11px; color: var(--text3); line-height: 1.6; max-width: 400px; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  .insight-grid { grid-template-columns: 1fr 1fr; }
+  .layer-grid { grid-template-columns: 1fr; }
+  .stock-grid { grid-template-columns: 1fr 1fr; }
+  .schedule-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  nav { padding: 0 16px; }
+  .nav-links { display: none; }
+  .nav-date { display: none; }
+  .hamburger { display: flex; }
+  main { padding: 20px 16px 88px; }
+  .hero { padding: 32px 0 28px; }
+  .hero-kpis { gap: 14px; }
+  .kpi-sep { display: none; }
+  .insight-grid { grid-template-columns: 1fr; }
+  .stock-grid { grid-template-columns: 1fr; }
+  .schedule-grid { grid-template-columns: 1fr 1fr; }
+  .bottom-nav { display: block; }
+  .score-table { font-size: 11px; }
+  .score-table th, .score-table td { padding: 8px; }
+  .mini-bar { width: 50px; }
+  .layer-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 400px) {
+  .schedule-grid { grid-template-columns: 1fr; }
+}
+
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.fade-up { animation: fadeUp .5s ease both; }
+.fade-up:nth-child(1) { animation-delay: .05s; }
+.fade-up:nth-child(2) { animation-delay: .1s; }
+.fade-up:nth-child(3) { animation-delay: .15s; }
+.fade-up:nth-child(4) { animation-delay: .2s; }
+.fade-up:nth-child(5) { animation-delay: .25s; }
+
+/* DIVIDER */
+.divider { height: 1px; background: var(--border); margin: 32px 0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">Trade<span>Signal</span></div>
+  <div class="nav-links">
+    <a href="#insight" class="active">인사이트</a>
+    <a href="#stocks">추천 종목</a>
+    <a href="#weekly">주간 브리핑</a>
+    <a href="#schedule">발표 일정</a>
+  </div>
+  <div class="nav-right">
+    <span class="nav-date">2026.06.05</span>
+    <span class="nav-badge">● 5월 리포트</span>
+    <div class="hamburger" onclick="toggleMenu()" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE DRAWER -->
+<div class="mobile-drawer" id="mobileDrawer">
+  <a href="#insight" onclick="closeMenu()">인사이트</a>
+  <a href="#stocks" onclick="closeMenu()">추천 종목</a>
+  <a href="#weekly" onclick="closeMenu()">주간 브리핑</a>
+  <a href="#schedule" onclick="closeMenu()">발표 일정</a>
+</div>
+
+<main>
+
+  <!-- HERO -->
+  <section class="hero fade-up">
+    <div class="hero-eyebrow">2026년 5월 수출입 동향 분석</div>
+    <h1>수출 데이터가 말하는<br><em>다음 투자 기회</em></h1>
+    <p class="hero-sub">산업통상자원부 월간 수출입 통계를 분석해 이달의 주목 품목과 수혜 종목을 자동으로 도출합니다. 매주 브리핑, 매월 심층 리포트.</p>
+    <div class="hero-kpis">
+      <div class="kpi">
+        <div class="kpi-val up">877.5억$</div>
+        <div class="kpi-label">5월 수출 — 역대 최대</div>
+      </div>
+      <div class="kpi-sep"></div>
+      <div class="kpi">
+        <div class="kpi-val up">+53.2%</div>
+        <div class="kpi-label">전년 동월 대비</div>
+      </div>
+      <div class="kpi-sep"></div>
+      <div class="kpi">
+        <div class="kpi-val pos">269.5억$</div>
+        <div class="kpi-label">무역수지 흑자 — 16개월 연속</div>
+      </div>
+      <div class="kpi-sep"></div>
+      <div class="kpi">
+        <div class="kpi-val">371.6억$</div>
+        <div class="kpi-label">반도체 수출 — 월 역대 최대</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TICKER -->
+  <div class="ticker-wrap fade-up">
+    <div class="ticker-inner" id="ticker">
+      <div class="ticker-item"><span class="ticker-name">코스피</span><span class="ticker-val">2,748</span><span class="ticker-chg up">▲+1.23%</span></div>
+      <div class="ticker-item"><span class="ticker-name">코스닥</span><span class="ticker-val">842</span><span class="ticker-chg dn">▼−0.44%</span></div>
+      <div class="ticker-item"><span class="ticker-name">SK하이닉스</span><span class="ticker-val">214,500</span><span class="ticker-chg up">▲+3.62%</span></div>
+      <div class="ticker-item"><span class="ticker-name">삼성전자</span><span class="ticker-val">82,400</span><span class="ticker-chg up">▲+2.11%</span></div>
+      <div class="ticker-item"><span class="ticker-name">한화오션</span><span class="ticker-val">58,200</span><span class="ticker-chg up">▲+1.74%</span></div>
+      <div class="ticker-item"><span class="ticker-name">코스맥스</span><span class="ticker-val">142,000</span><span class="ticker-chg up">▲+0.89%</span></div>
+      <div class="ticker-item"><span class="ticker-name">달러/원</span><span class="ticker-val">1,381</span><span class="ticker-chg dn">▼−0.21%</span></div>
+      <div class="ticker-item"><span class="ticker-name">WTI유가</span><span class="ticker-val">$68.4</span><span class="ticker-chg dn">▼−0.60%</span></div>
+      <div class="ticker-item"><span class="ticker-name">SOXX</span><span class="ticker-val">$248.3</span><span class="ticker-chg up">▲+1.88%</span></div>
+      <div class="ticker-item"><span class="ticker-name">NVIDIA</span><span class="ticker-val">$1,128</span><span class="ticker-chg up">▲+2.14%</span></div>
+      <!-- duplicate for seamless loop -->
+      <div class="ticker-item"><span class="ticker-name">코스피</span><span class="ticker-val">2,748</span><span class="ticker-chg up">▲+1.23%</span></div>
+      <div class="ticker-item"><span class="ticker-name">코스닥</span><span class="ticker-val">842</span><span class="ticker-chg dn">▼−0.44%</span></div>
+      <div class="ticker-item"><span class="ticker-name">SK하이닉스</span><span class="ticker-val">214,500</span><span class="ticker-chg up">▲+3.62%</span></div>
+      <div class="ticker-item"><span class="ticker-name">삼성전자</span><span class="ticker-val">82,400</span><span class="ticker-chg up">▲+2.11%</span></div>
+      <div class="ticker-item"><span class="ticker-name">한화오션</span><span class="ticker-val">58,200</span><span class="ticker-chg up">▲+1.74%</span></div>
+      <div class="ticker-item"><span class="ticker-name">코스맥스</span><span class="ticker-val">142,000</span><span class="ticker-chg up">▲+0.89%</span></div>
+      <div class="ticker-item"><span class="ticker-name">달러/원</span><span class="ticker-val">1,381</span><span class="ticker-chg dn">▼−0.21%</span></div>
+      <div class="ticker-item"><span class="ticker-name">WTI유가</span><span class="ticker-val">$68.4</span><span class="ticker-chg dn">▼−0.60%</span></div>
+      <div class="ticker-item"><span class="ticker-name">SOXX</span><span class="ticker-val">$248.3</span><span class="ticker-chg up">▲+1.88%</span></div>
+      <div class="ticker-item"><span class="ticker-name">NVIDIA</span><span class="ticker-val">$1,128</span><span class="ticker-chg up">▲+2.14%</span></div>
+    </div>
+  </div>
+
+  <!-- INSIGHT SECTION -->
+  <section id="insight">
+    <div class="sec-header">
+      <div>
+        <div class="sec-title">이달의 주목 품목</div>
+        <div class="sec-sub">과거 16개월 종합 스코어 — 서프라이즈 40% + 모멘텀 35% + 비중 25%</div>
+      </div>
+      <a href="#score" class="sec-link">전체 순위 보기 →</a>
+    </div>
+
+    <div class="insight-grid">
+      <div class="insight-card featured fade-up" onclick="showDetail('semi')">
+        <div class="ic-top">
+          <div class="ic-rank">1위 · 종합점수 96</div>
+          <span class="ic-badge badge-red">구조 전환</span>
+        </div>
+        <div class="ic-name">반도체</div>
+        <div class="ic-tags">
+          <span class="ic-tag">YoY +169%</span>
+          <span class="ic-tag">3개월 연속↑</span>
+          <span class="ic-tag">비중 42%</span>
+        </div>
+        <div class="ic-sparkwrap"><canvas id="spk1" role="img" aria-label="반도체 수출 추이"></canvas></div>
+        <div class="ic-desc">HBM 주도 구조 전환. AI 빅테크 Capex 확대로 메모리 고정가 상승. HBM4→HBF 진화 임박.</div>
+        <div class="ic-score">
+          <span class="ic-score-label">서프라이즈</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:100%;background:var(--accent);"></div></div>
+          <span class="ic-score-val">40</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">모멘텀</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:91%;background:var(--accent);"></div></div>
+          <span class="ic-score-val">32</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">비중·신흥</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:96%;background:var(--accent);"></div></div>
+          <span class="ic-score-val">24</span>
+        </div>
+      </div>
+
+      <div class="insight-card fade-up" onclick="showDetail('beauty')">
+        <div class="ic-top">
+          <div class="ic-rank">2위 · 종합점수 81</div>
+          <span class="ic-badge badge-blue">시장 지형 변화</span>
+        </div>
+        <div class="ic-name">화장품</div>
+        <div class="ic-tags">
+          <span class="ic-tag">YoY +두자릿수↑</span>
+          <span class="ic-tag">7개월 연속↑</span>
+          <span class="ic-tag">미국 역전</span>
+        </div>
+        <div class="ic-sparkwrap"><canvas id="spk2" role="img" aria-label="화장품 수출 추이"></canvas></div>
+        <div class="ic-desc">중국 의존 탈피 완성. 미국이 최대 시장 등극. 동남아·유럽 신흥 성장축 부상 중.</div>
+        <div class="ic-score">
+          <span class="ic-score-label">서프라이즈</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:70%;background:var(--blue);"></div></div>
+          <span class="ic-score-val">28</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">모멘텀</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:91%;background:var(--blue);"></div></div>
+          <span class="ic-score-val">32</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">비중·신흥</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:84%;background:var(--blue);"></div></div>
+          <span class="ic-score-val">21</span>
+        </div>
+      </div>
+
+      <div class="insight-card fade-up" onclick="showDetail('ship')">
+        <div class="ic-top">
+          <div class="ic-rank">3위 · 종합점수 74</div>
+          <span class="ic-badge badge-grn">모멘텀 지속</span>
+        </div>
+        <div class="ic-name">선박·LNG</div>
+        <div class="ic-tags">
+          <span class="ic-tag">YoY +16.7%</span>
+          <span class="ic-tag">5개월 연속↑</span>
+          <span class="ic-tag">수주잔고 3년</span>
+        </div>
+        <div class="ic-sparkwrap"><canvas id="spk3" role="img" aria-label="선박 수출 추이"></canvas></div>
+        <div class="ic-desc">LNG선 인도 증가로 5개월 연속. 수주잔고 기반 안정적 흐름. 조선 빅3 동반 수혜.</div>
+        <div class="ic-score">
+          <span class="ic-score-label">서프라이즈</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:45%;background:var(--green);"></div></div>
+          <span class="ic-score-val">18</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">모멘텀</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:97%;background:var(--green);"></div></div>
+          <span class="ic-score-val">34</span>
+        </div>
+        <div class="ic-score">
+          <span class="ic-score-label">비중·신흥</span>
+          <div class="ic-score-track"><div class="ic-score-fill" style="width:88%;background:var(--green);"></div></div>
+          <span class="ic-score-val">22</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSIGHT DETAIL — SEMI -->
+    <div class="insight-detail fade-up" id="detail-semi" style="display:none;">
+      <div class="detail-header">
+        <div>
+          <div class="detail-title">반도체 — 3단계 인사이트</div>
+          <div class="detail-meta">수출 데이터 분석 · 2025.01 ~ 2026.05 (16개월)</div>
+        </div>
+        <span class="ic-badge badge-red" style="font-size:11px;padding:4px 12px;">구조 전환 신호</span>
+      </div>
+      <div class="layer-grid">
+        <div class="layer-item">
+          <div class="layer-num">Layer 1 · 무슨 일</div>
+          <div class="layer-q">수치 이상 탐지</div>
+          <div class="layer-a">+169% YoY. 과거 반도체 사이클(2017, 2021)과 달리 단가+물량 동반 급증. 3개월 연속 역대 최대 — 패턴 분류: 구조 전환.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 2 · 왜</div>
+          <div class="layer-q">구조 분석</div>
+          <div class="layer-a">미국 빅테크 AI Capex ~$300B. GPU당 HBM 탑재량 H100(80GB)→B200(192GB). 대만·미국 수출 급증 = HBM 수요처 집중.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 3 · 어디로</div>
+          <div class="layer-q">전망 인사이트</div>
+          <div class="layer-a">HBM3E→HBM4 전환 중. 2027년 이후 HBF(High Bandwidth Fabric) 진화 가시화. SK하이닉스 TSV 기술 + 한미반도체 TC본더 독점 재확인.</div>
+        </div>
+      </div>
+      <div class="insight-box">
+        <div class="insight-box-title">핵심 인사이트 — HBM → HBF 진화 로드맵</div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--accent);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">현재 HBM3E 양산 중이나 2027년 이후 <strong style="color:var(--text);">HBF(High Bandwidth Fabric)</strong> 전환 로드맵 가시화. 기존 적층(Stack) 방식에서 웨이퍼 직접 본딩으로 진화.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--accent);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">수출 수치 기준 2026~2027년 HBM 비중이 전체 반도체 수출의 <strong style="color:var(--text);">50% 돌파 가능</strong> 시나리오.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--accent2);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;"><strong style="color:var(--accent2);">리스크:</strong> 빅테크 Capex 감속 시 HBM 수요 급감 가능. 중국 반도체 굴기 가속으로 범용 DRAM 단가 하방 압력.</div></div>
+      </div>
+    </div>
+
+    <!-- INSIGHT DETAIL — BEAUTY -->
+    <div class="insight-detail fade-up" id="detail-beauty" style="display:none;">
+      <div class="detail-header">
+        <div>
+          <div class="detail-title">화장품 — 3단계 인사이트</div>
+          <div class="detail-meta">수출 데이터 분석 · 2025.01 ~ 2026.05 (16개월)</div>
+        </div>
+        <span class="ic-badge badge-blue" style="font-size:11px;padding:4px 12px;">시장 지형 변화</span>
+      </div>
+      <div class="layer-grid">
+        <div class="layer-item">
+          <div class="layer-num">Layer 1 · 무슨 일</div>
+          <div class="layer-q">수치 이상 탐지</div>
+          <div class="layer-a">2021년 대중국 비중 53.2% → 2025년 미국이 중국 역전. 전체 수출 114억$ 역대 최대. 성장 패턴: 시장 지형 변화.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 2 · 왜</div>
+          <div class="layer-q">구조 분석</div>
+          <div class="layer-a">중국 로컬 브랜드 잠식 + 틱톡·유튜브 K뷰티 바이럴로 미국 MZ 침투. 동남아 온라인 플랫폼 급성장. 폴란드 +112% 동유럽 허브화.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 3 · 어디로</div>
+          <div class="layer-q">전망 인사이트</div>
+          <div class="layer-a">2026~2027년 연 130~140억$ 목표 현실적. 동남아(인도네시아·태국) 2위권 진입 가능. OEM/ODM이 미국 관세 영향 낮아 상대 수혜.</div>
+        </div>
+      </div>
+      <div class="insight-box">
+        <div class="insight-box-title">핵심 인사이트 — K뷰티 지역 다변화 전략</div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--blue);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">미국 집중 → 동남아·유럽 분산 전략. <strong style="color:var(--text);">중국 의존 탈피 완성</strong>으로 지정학 리스크 크게 축소.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--blue);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">OEM/ODM(코스맥스·한국콜마)이 브랜드사보다 <strong style="color:var(--text);">관세 영향 낮고 다수 고객사 효과</strong>로 변동성 작음.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--accent2);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;"><strong style="color:var(--accent2);">리스크:</strong> 미국 관세 25% 발동 시 수출 단가 압박. 현지 생산 거점 확보 여부가 핵심 변수.</div></div>
+      </div>
+    </div>
+
+    <!-- INSIGHT DETAIL — SHIP -->
+    <div class="insight-detail fade-up" id="detail-ship" style="display:none;">
+      <div class="detail-header">
+        <div>
+          <div class="detail-title">선박·LNG — 3단계 인사이트</div>
+          <div class="detail-meta">수출 데이터 분석 · 2025.01 ~ 2026.05 (16개월)</div>
+        </div>
+        <span class="ic-badge badge-grn" style="font-size:11px;padding:4px 12px;">모멘텀 지속</span>
+      </div>
+      <div class="layer-grid">
+        <div class="layer-item">
+          <div class="layer-num">Layer 1 · 무슨 일</div>
+          <div class="layer-q">수치 이상 탐지</div>
+          <div class="layer-a">+16.7% YoY. 5개월 연속 플러스. 증가율은 낮지만 연속성 점수 최고. 수주잔고 기반 예측 가능한 성장.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 2 · 왜</div>
+          <div class="layer-q">구조 분석</div>
+          <div class="layer-a">글로벌 LNG 수요 확대로 LNG선 발주 급증. 조선 빅3 수주잔고 3년치 확보. 친환경 선박(암모니아·메탄올선) 전환 가속.</div>
+        </div>
+        <div class="layer-item">
+          <div class="layer-num">Layer 3 · 어디로</div>
+          <div class="layer-q">전망 인사이트</div>
+          <div class="layer-a">2027년까지 LNG선 인도 물량 확정. 한화오션 방산함정 추가 수혜. 암모니아선 전환으로 2028년 이후 2차 수주 사이클 기대.</div>
+        </div>
+      </div>
+      <div class="insight-box">
+        <div class="insight-box-title">핵심 인사이트 — 조선 슈퍼사이클 진입 여부</div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--green);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">수주잔고 기반 <strong style="color:var(--text);">2027년까지 실적 가시성 확보</strong>. 단기 주가 변동보다 중장기 보유 전략이 적합.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--green);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;">친환경 선박 전환 수요로 <strong style="color:var(--text);">2028년 이후 2차 사이클</strong> 기대. 암모니아·메탄올 추진 선박이 핵심.</div></div>
+        <div class="insight-point"><div class="insight-dot" style="background:var(--accent2);"></div><div style="font-size:12px;color:#a0a09a;line-height:1.7;"><strong style="color:var(--accent2);">리스크:</strong> 중동전쟁 장기화 시 해운 물류 차질. 중국 조선소 저가 수주 경쟁 심화.</div></div>
+      </div>
+    </div>
+
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- STOCK SECTION -->
+  <section id="stocks">
+    <div class="sec-header">
+      <div>
+        <div class="sec-title">수혜 종목 추천</div>
+        <div class="sec-sub">국내 코스피·코스닥 위주 · 미국은 ETF만 · 매월 1일 업데이트</div>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;padding:12px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);">
+      <span style="color:var(--accent);font-weight:500;">반도체</span> 섹터 수출 최강세 — Top3 종목
+    </div>
+
+    <div class="stock-grid">
+      <div class="stock-card top fade-up">
+        <div class="sc-header">
+          <div><div class="sc-name">SK하이닉스</div><div class="sc-code">000660 · 코스피</div></div>
+          <span class="ic-badge badge-red">매수</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk1" role="img" aria-label="SK하이닉스 주가 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val" style="color:var(--accent);">+148%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">수출 연관도</div><div class="sc-stat-val">최고</div></div>
+        </div>
+        <div class="sc-desc">HBM3E 엔비디아 독점 공급. 반도체 수출과 주가 상관계수 0.91. HBM4 전환 시 추가 상승 여력.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+
+      <div class="stock-card fade-up">
+        <div class="sc-header">
+          <div><div class="sc-name">삼성전자</div><div class="sc-code">005930 · 코스피</div></div>
+          <span class="ic-badge badge-red">매수</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk2" role="img" aria-label="삼성전자 주가 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val" style="color:var(--accent);">+62%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">수출 연관도</div><div class="sc-stat-val">높음</div></div>
+        </div>
+        <div class="sc-desc">HBM4 납품 협의 완료. 반도체+파운드리 이중 수혜. 수출 비중 1위 품목과 직결.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+
+      <div class="stock-card fade-up">
+        <div class="sc-header">
+          <div><div class="sc-name">SOXX ETF</div><div class="sc-code">SOXX · 미국</div></div>
+          <span class="ic-badge badge-amb">ETF</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk3" role="img" aria-label="SOXX ETF 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val" style="color:var(--accent);">+89%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">분산 효과</div><div class="sc-stat-val">최고</div></div>
+        </div>
+        <div class="sc-desc">엔비디아·TSMC·퀄컴 포함. 한국 반도체 수출 호조와 글로벌 AI 수요 동시 반영.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--text2);margin-bottom:16px;margin-top:4px;padding:12px 16px;background:var(--bg2);border-radius:var(--r);border:1px solid var(--border);">
+      <span style="color:var(--blue);font-weight:500;">화장품</span> 섹터 지형 변화 — Top3 종목
+    </div>
+
+    <div class="stock-grid">
+      <div class="stock-card top fade-up" style="border-color:rgba(74,143,232,0.25);">
+        <div class="sc-header">
+          <div><div class="sc-name">코스맥스</div><div class="sc-code">192820 · 코스피</div></div>
+          <span class="ic-badge badge-blue">매수</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk4" role="img" aria-label="코스맥스 주가 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val" style="color:var(--blue);">+94%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">수출 연관도</div><div class="sc-stat-val">최고</div></div>
+        </div>
+        <div class="sc-desc">글로벌 OEM 1위. 미국·동남아 고객사 급증. 관세 영향 낮고 다수 고객사로 변동성 작음.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+
+      <div class="stock-card fade-up">
+        <div class="sc-header">
+          <div><div class="sc-name">한국콜마</div><div class="sc-code">161890 · 코스피</div></div>
+          <span class="ic-badge badge-blue">매수</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk5" role="img" aria-label="한국콜마 주가 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val" style="color:var(--blue);">+57%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">미국 대응</div><div class="sc-stat-val">현지 공장</div></div>
+        </div>
+        <div class="sc-desc">미국 현지 생산 공장 보유 — 관세 리스크 헤지. OEM/ODM 2위. 북미 점유율 확대 중.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+
+      <div class="stock-card fade-up">
+        <div class="sc-header">
+          <div><div class="sc-name">아모레퍼시픽</div><div class="sc-code">090430 · 코스피</div></div>
+          <span class="ic-badge badge-gray">주목</span>
+        </div>
+        <div class="sc-sparkwrap"><canvas id="ssk6" role="img" aria-label="아모레퍼시픽 주가 추이"></canvas></div>
+        <div class="sc-stats">
+          <div class="sc-stat"><div class="sc-stat-label">'25년 수익률</div><div class="sc-stat-val">+28%</div></div>
+          <div class="sc-stat"><div class="sc-stat-label">북미 전략</div><div class="sc-stat-val">강화 중</div></div>
+        </div>
+        <div class="sc-desc">설화수·라네즈 미국 세포라 확대. 중국 매출 감소 우려 있으나 미국·동남아로 채우는 중.</div>
+        <button class="sc-btn">상세 분석 보기 →</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- WEEKLY BRIEF -->
+  <section id="weekly">
+    <div class="sec-header">
+      <div>
+        <div class="sec-title">주간 브리핑</div>
+        <div class="sec-sub">매주 월요일 발행 · 3분 읽기</div>
+      </div>
+      <a href="#" class="sec-link">전체 보기 →</a>
+    </div>
+    <div class="brief-list">
+      <div class="brief-item">
+        <div class="brief-date">06.02<br>월요일</div>
+        <div class="brief-content">
+          <div class="brief-title">5월 수출 877억$ 역대 최대 — 반도체 169% 폭증, 1조달러 달성 가능성 언급</div>
+          <div class="brief-summary">산업부 공식 발표. 일평균 수출 42.8억$ 사상 첫 40억$ 돌파. 화장품·바이오헬스도 동반 강세. Top5 종목 신호 반도체 '매수', 화장품 '매수' 유지.</div>
+          <div class="brief-tags">
+            <span class="ic-badge badge-red">반도체</span>
+            <span class="ic-badge badge-blue">화장품</span>
+            <span class="ic-badge badge-grn">역대 최대</span>
+          </div>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-date">05.26<br>월요일</div>
+        <div class="brief-content">
+          <div class="brief-title">연준 금리 동결 확인 — 9월 인하 기대↑, AI 투자 지속 시그널</div>
+          <div class="brief-summary">파월 의장 발언으로 시장 안도. 빅테크 AI Capex 유지 → 반도체 수요 지속 근거 강화. HBM 단가 상승 모멘텀 이어짐.</div>
+          <div class="brief-tags">
+            <span class="ic-badge badge-red">반도체</span>
+            <span class="ic-badge badge-gray">거시경제</span>
+          </div>
+        </div>
+      </div>
+      <div class="brief-item">
+        <div class="brief-date">05.19<br>월요일</div>
+        <div class="brief-content">
+          <div class="brief-title">4월 확정치 발표 — 반도체 수출 320억$ 확정, 전망치 상회</div>
+          <div class="brief-summary">관세청 확정치 기준 반도체 319.8억$. 잠정치 대비 0.1억$ 상향. 화장품 정확한 세부 수치 원문 확인 필요 — PDF 직접 조회 권장.</div>
+          <div class="brief-tags">
+            <span class="ic-badge badge-red">반도체</span>
+            <span class="ic-badge badge-amb">확정치</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SCORE TABLE -->
+  <section id="score">
+    <div class="sec-header">
+      <div>
+        <div class="sec-title">전체 품목 스코어 순위</div>
+        <div class="sec-sub">2026년 5월 기준 · 16개월 누적 종합점수</div>
+      </div>
+    </div>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th style="width:40px;">순위</th>
+          <th>품목</th>
+          <th>YoY</th>
+          <th>연속↑</th>
+          <th style="width:120px;">종합 점수</th>
+          <th>신호</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="rank-num">1</span></td>
+          <td><strong>반도체</strong></td>
+          <td style="color:var(--accent);">+169%</td>
+          <td>3개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:96%;"></div></div></td>
+          <td><span class="ic-badge badge-red">매수</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">2</span></td>
+          <td><strong>화장품</strong></td>
+          <td style="color:var(--blue);">+두자릿수</td>
+          <td>7개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:81%;background:var(--blue);"></div></div></td>
+          <td><span class="ic-badge badge-blue">매수</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">3</span></td>
+          <td><strong>선박</strong></td>
+          <td style="color:var(--green);">+16.7%</td>
+          <td>5개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:74%;background:var(--green);"></div></div></td>
+          <td><span class="ic-badge badge-grn">관망</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">4</span></td>
+          <td>컴퓨터·SSD</td>
+          <td style="color:var(--accent);">+291%</td>
+          <td>4개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:87%;"></div></div></td>
+          <td><span class="ic-badge badge-red">매수</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">5</span></td>
+          <td>비철금속</td>
+          <td style="color:var(--accent);">+41.5%</td>
+          <td>4개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:68%;background:var(--accent2);"></div></div></td>
+          <td><span class="ic-badge badge-amb">주목</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">6</span></td>
+          <td>바이오헬스</td>
+          <td>+증가세</td>
+          <td>7개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:62%;background:var(--green);"></div></div></td>
+          <td><span class="ic-badge badge-grn">주목</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">7</span></td>
+          <td>석유제품</td>
+          <td>+46.6%</td>
+          <td>2개월</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:44%;background:#4a4a52;"></div></div></td>
+          <td><span class="ic-badge badge-gray">중립</span></td>
+        </tr>
+        <tr>
+          <td><span class="rank-num">8</span></td>
+          <td>자동차</td>
+          <td style="color:#4a8fe8;">−소폭</td>
+          <td>—</td>
+          <td><div class="mini-bar"><div class="mini-fill" style="width:28%;background:#4a4a52;"></div></div></td>
+          <td><span class="ic-badge badge-gray">관망</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SCHEDULE -->
+  <section id="schedule">
+    <div class="sec-header">
+      <div>
+        <div class="sec-title">발표 일정</div>
+        <div class="sec-sub">2026년 6월</div>
+      </div>
+    </div>
+    <div class="schedule-grid">
+      <div class="sch-card today">
+        <div class="sch-date">5</div>
+        <div class="sch-event">오늘</div>
+        <div class="sch-note">5월 리포트 발행 완료</div>
+      </div>
+      <div class="sch-card">
+        <div class="sch-date">11</div>
+        <div class="sch-event">미국 CPI 발표</div>
+        <div class="sch-note">5월 소비자물가 — 금리 핵심 변수</div>
+      </div>
+      <div class="sch-card">
+        <div class="sch-date">11</div>
+        <div class="sch-event">수출 잠정치</div>
+        <div class="sch-note">관세청 6월 1~10일 잠정치</div>
+      </div>
+      <div class="sch-card">
+        <div class="sch-date">21</div>
+        <div class="sch-event">수출 잠정치</div>
+        <div class="sch-note">관세청 6월 1~20일 잠정치</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-brand">Trade<span>Signal</span></div>
+  <div class="footer-note">본 서비스는 산업통상자원부·관세청 공식 수출입 통계를 기반으로 한 참고 정보입니다. 투자 권유가 아니며 최종 판단은 본인 책임입니다.</div>
+</footer>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <div class="bottom-nav-inner">
+    <a class="bn-item active" href="#insight"><div class="bn-icon">◈</div><div class="bn-label">인사이트</div></a>
+    <a class="bn-item" href="#stocks"><div class="bn-icon">◎</div><div class="bn-label">종목</div></a>
+    <a class="bn-item" href="#weekly"><div class="bn-icon">◷</div><div class="bn-label">브리핑</div></a>
+    <a class="bn-item" href="#schedule"><div class="bn-icon">◫</div><div class="bn-label">일정</div></a>
+  </div>
+</nav>
+
+<script>
+function toggleMenu() {
+  const d = document.getElementById('mobileDrawer');
+  d.classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('mobileDrawer').classList.remove('open');
+}
+
+const activeDetails = { semi: false, beauty: false, ship: false };
+function showDetail(key) {
+  const ids = { semi: 'detail-semi', beauty: 'detail-beauty', ship: 'detail-ship' };
+  const el = document.getElementById(ids[key]);
+  const isOpen = activeDetails[key];
+  Object.keys(activeDetails).forEach(k => {
+    activeDetails[k] = false;
+    document.getElementById(ids[k]).style.display = 'none';
+  });
+  if (!isOpen) {
+    activeDetails[key] = true;
+    el.style.display = 'block';
+    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
+
+function spk(id, data, color) {
+  const c = document.getElementById(id);
+  if (!c) return;
+  new Chart(c, {
+    type: 'line',
+    data: { labels: data.map((_,i)=>i), datasets: [{ data, borderColor: color, borderWidth: 1.5, pointRadius: 0, fill: true, backgroundColor: color.replace('1)', '0.1)'), tension: 0.4 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, scales: { x: { display: false }, y: { display: false } }, animation: false }
+  });
+}
+
+spk('spk1', [162,178,205,189,208,253,300,317,289,310,328,372], 'rgba(232,87,60,1)');
+spk('spk2', [75,88,94,103,95,97,102,108,105,110,114,118], 'rgba(74,143,232,1)');
+spk('spk3', [18,20,19,22,21,23,24,25,24,26,26,26], 'rgba(61,184,122,1)');
+spk('ssk1', [100,118,132,128,155,170,190,185,200,210,230,248], 'rgba(232,87,60,1)');
+spk('ssk2', [100,108,115,112,118,125,135,130,140,148,155,162], 'rgba(232,87,60,1)');
+spk('ssk3', [100,112,125,120,138,152,168,162,175,180,185,189], 'rgba(232,87,60,1)');
+spk('ssk4', [100,114,130,138,152,165,178,172,180,185,190,194], 'rgba(74,143,232,1)');
+spk('ssk5', [100,108,118,122,130,138,148,143,148,152,155,157], 'rgba(74,143,232,1)');
+spk('ssk6', [100,104,110,108,112,116,120,118,122,124,126,128], 'rgba(140,139,132,1)');
+</script>
+<script>
+async function loadData() {
+  try {
+    const [report, scores, briefs] = await Promise.all([
+      fetch("/api/report/latest").then(r=>r.json()),
+      fetch("/api/scores").then(r=>r.json()),
+      fetch("/api/briefs").then(r=>r.json())
+    ]);
+    console.log("API connected:", report.period);
+  } catch(e) {
+    console.log("Static mode (no server)");
+  }
+}
+loadData();
+</script>
+</body>
+</html>

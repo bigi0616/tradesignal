@@ -1,0 +1,40 @@
+{
+  "period": "2026년 5월",
+  "publishedAt": "2026-06-01",
+  "headline": {
+    "export": 877.5,
+    "exportGrowth": 53.2,
+    "tradeBalance": 269.5,
+    "semiconductor": 371.6,
+    "semigGrowth": 169.4
+  },
+  "topItems": [
+    {
+      "rank": 1, "name": "반도체", "score": 96,
+      "yoy": 169.4, "streak": 3, "badge": "구조 전환",
+      "signal": "매수", "color": "red"
+    },
+    {
+      "rank": 2, "name": "화장품", "score": 81,
+      "yoy": null, "streak": 7, "badge": "시장 지형 변화",
+      "signal": "매수", "color": "blue"
+    },
+    {
+      "rank": 3, "name": "선박·LNG", "score": 74,
+      "yoy": 16.7, "streak": 5, "badge": "모멘텀 지속",
+      "signal": "관망", "color": "green"
+    }
+  ],
+  "stocks": {
+    "semiconductor": [
+      { "name": "SK하이닉스", "code": "000660", "market": "코스피", "signal": "매수", "return25": "+148%", "desc": "HBM3E 엔비디아 독점. 수출 상관계수 0.91." },
+      { "name": "삼성전자",   "code": "005930", "market": "코스피", "signal": "매수", "return25": "+62%",  "desc": "HBM4 납품 협의 완료. 반도체+파운드리 이중 수혜." },
+      { "name": "SOXX ETF",  "code": "SOXX",   "market": "미국ETF", "signal": "ETF",  "return25": "+89%",  "desc": "엔비디아·TSMC 포함. 분산 효과 최고." }
+    ],
+    "cosmetics": [
+      { "name": "코스맥스",    "code": "192820", "market": "코스피", "signal": "매수", "return25": "+94%", "desc": "글로벌 OEM 1위. 관세 영향 낮음." },
+      { "name": "한국콜마",    "code": "161890", "market": "코스피", "signal": "매수", "return25": "+57%", "desc": "미국 현지 공장 보유 — 관세 헤지." },
+      { "name": "아모레퍼시픽","code": "090430", "market": "코스피", "signal": "주목", "return25": "+28%", "desc": "북미 전략 강화 중." }
+    ]
+  }
+}
